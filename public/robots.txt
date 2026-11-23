@@ -1,0 +1,50 @@
+# robots.txt for Amar Bangladesh News Platform
+# Protection against aggressive scrapers, malicious crawlers, and server overload.
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+# Disallow aggressive SEO crawlers & scrapers that drain server bandwidth
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: PetalBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: MegaIndex
+Disallow: /
+
+User-agent: BLEXBot
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: DataForSeoBot
+Disallow: /
+
+# Rate limit remaining bots to prevent server down / DoS
+User-agent: *
+Crawl-delay: 10
+Disallow: /api/
+Disallow: /admin/
+Disallow: /*?*searchTerm=
+Allow: /

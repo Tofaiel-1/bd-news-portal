@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --app-font-scale: 1;
+  }
+
+  html {
+    font-size: calc(16px * var(--app-font-scale, 1));
+  }
+
+  body {
+    background-color: #FBFBF9;
+    color: #0F172A;
+    font-family: 'Anek Bangla', 'Hind Siliguri', 'Inter', system-ui, -apple-system, sans-serif;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  html.dark body {
+    background-color: #0c0a09;
+    color: #f5f5f4;
+  }
+
+  h1, h2, h3, h4, .font-serif {
+    font-family: 'Noto Serif Bengali', 'Anek Bangla', serif;
+    letter-spacing: -0.01em;
+  }
+}
+
+/* স্মুথ স্ক্রলিং এবং কাস্টম স্ক্রলবার */
+html {
+  scroll-behavior: smooth;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* কাস্টম মার্কার গ্লো ও অ্যানিমেশন */
+.marker-glow {
+  filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.6));
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(225, 29, 72, 0.3), 0 0 1px rgba(225, 29, 72, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(225, 29, 72, 0.65), 0 0 35px rgba(225, 29, 72, 0.35);
+  }
+}
+
+.breaking-glow {
+  animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes live-indicator {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 0.75;
+  }
+}
+
+.live-indicator {
+  animation: live-indicator 1.8s ease-in-out infinite;
+}
+
+/* জমকালো গ্লাস ইফেক্ট */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.glass-dark {
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
