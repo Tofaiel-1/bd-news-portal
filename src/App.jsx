@@ -77,9 +77,9 @@ export default function App() {
     changeDateKey
   } = useNewsFeed();
 
-  // পেজিনেশন স্টেট (ডিফল্ট ৬টি - ১ স্ক্রিন ভিউতে ঠিক ৬টি কার্ড)
+  // পেজিনেশন স্টেট (ডিফল্ট ২৪টি - ১ স্ক্রিনে ২৪টি কার্ড অটো শো)
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(6);
+  const [pageSize, setPageSize] = useState(24);
 
   const todayKey = formatDateKey(new Date());
   const isViewingPastDate = selectedDateKey && selectedDateKey !== todayKey;
@@ -755,12 +755,6 @@ export default function App() {
           events={newsEvents}
           onClose={() => setIsSearchModalOpen(false)}
           onOpenDetail={(evt) => setDetailModalEvent(evt)}
-        />
-      )}
-
-      {isVerificationLabOpen && (
-        <VerificationLabModal
-          onClose={() => setIsVerificationLabOpen(false)}
         />
       )}
 

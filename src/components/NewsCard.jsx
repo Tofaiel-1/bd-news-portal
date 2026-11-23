@@ -242,7 +242,7 @@ export default function NewsCard({
                 </div>
                 <div className="text-stone-800 dark:text-stone-200 leading-snug">
                   <span className="font-bold text-emerald-700 dark:text-emerald-400">উৎস: </span>
-                  {event.independence?.independent_source_count}টি স্বাধীন মাধ্যম নিশ্চিত করেছে (আস্থা: {event.confidence}%)
+                  {event.primarySource?.nameBn || 'যাচাইকৃত গণমাধ্যম'} • {event.time_ago}
                 </div>
               </div>
             )}

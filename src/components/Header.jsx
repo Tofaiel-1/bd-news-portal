@@ -75,7 +75,7 @@ export default function Header({
 
           <div className="flex items-center gap-4 text-xs sm:text-sm font-sans">
             <span className="hidden md:inline text-stone-300 font-medium">
-              নির্ভরযোগ্য স্থানভিত্তিক সাংবাদিকতা ও বহু-উৎস প্রমাণ
+              সারাদেশ ও আন্তর্জাতিক সংবাদ নেটওয়ার্ক | ২৪/৭ লাইভ আপডেট
             </span>
             <button
               onClick={onOpenBriefingModal}
@@ -213,16 +213,6 @@ export default function Header({
             <span className="hidden sm:inline">খুঁজুন</span>
           </button>
 
-          {/* ভেরিফিকেশন টেস্ট ল্যাব বাটন (বিশেষ প্রম্পট ইঞ্জিন ফিচার) */}
-          <button
-            onClick={onOpenVerificationLab}
-            className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-emerald-800 to-teal-900 text-white hover:from-emerald-700 hover:to-teal-800 text-xs font-semibold shadow-sm transition-all ring-1 ring-emerald-600/40"
-            title="বাংলাদেশ নিউজ ভেরিফিকেশন ইঞ্জিন টেস্ট ল্যাব"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-emerald-300 animate-spin" style={{ animationDuration: '6s' }} />
-            <span>ভেরিফিকেশন ল্যাব</span>
-          </button>
-
           {/* মোবাইল মেনু টগল */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -286,16 +276,6 @@ export default function Header({
             >
               <Search className="w-4 h-4 text-stone-600" />
               অনুসন্ধান
-            </button>
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                onOpenVerificationLab();
-              }}
-              className="p-2.5 rounded-lg bg-stone-900 text-white font-medium flex items-center justify-center gap-1.5"
-            >
-              <Sparkles className="w-4 h-4 text-emerald-400" />
-              ভেরিফিকেশন ল্যাব
             </button>
             <button
               onClick={() => {

@@ -48,7 +48,7 @@ export default function TopNewsShowcase({
               </span>
             </div>
             <p className="text-xs text-stone-500 dark:text-stone-400 font-sans mt-0.5">
-              শীর্ষ গণমাধ্যম ও যাচাইকৃত সোর্সের আস্থা, বহু-উৎস মিল ও জরুরি পরিস্থিতি সূচক অনুযায়ী স্বয়ংক্রিয়ভাবে নির্ধারিত
+              শীর্ষ জাতীয় ও আন্তর্জাতিক গণমাধ্যমের সর্বশেষ গুরুত্বপূর্ণ প্রকাশিত সংবাদের বিশেষ সংকলন
             </p>
           </div>
         </div>
@@ -56,7 +56,7 @@ export default function TopNewsShowcase({
         <div className="flex items-center gap-2 text-xs">
           <span className="px-3 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 font-bold flex items-center gap-1.5 shadow-2xs">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-            <span>স্বর্ণমান সত্যতা যাচাইকৃত</span>
+            <span>শীর্ষ সংবাদ সংকলন</span>
           </span>
         </div>
       </div>

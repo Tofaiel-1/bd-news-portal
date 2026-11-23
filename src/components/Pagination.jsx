@@ -6,7 +6,7 @@ export default function Pagination({
   currentPage = 1,
   totalPages = 1,
   onPageChange,
-  pageSize = 6,
+  pageSize = 24,
   onPageSizeChange,
   totalItems = 0,
   targetScrollId = 'news-feed-grid'
@@ -128,7 +128,7 @@ export default function Pagination({
         </button>
       </div>
 
-      {/* ডান পাশ: প্রতি পৃষ্ঠায় সংবাদের সংখ্যা নির্বাচক (ডিফল্ট ৬টি - ১ স্ক্রিন ভিউ) */}
+      {/* ডান পাশ: প্রতি পৃষ্ঠায় সংবাদের সংখ্যা নির্বাচক (ডিফল্ট ২৪টি) */}
       {onPageSizeChange && (
         <div className="flex items-center gap-2 text-xs sm:text-sm text-stone-700 dark:text-stone-300 font-medium">
           <span className="whitespace-nowrap">প্রতি স্ক্রিনে:</span>
@@ -140,10 +140,11 @@ export default function Pagination({
             }}
             className="px-2.5 py-1.5 rounded-xl bg-stone-50 dark:bg-stone-800 border border-stone-300 dark:border-stone-700 font-bold font-mono text-stone-800 dark:text-stone-200 outline-none cursor-pointer hover:border-emerald-500 transition-colors"
           >
-            <option value={6}>৬টি (১ স্ক্রিন ভিউ)</option>
+            <option value={24}>২৪টি (অটো)</option>
             <option value={12}>১২টি</option>
             <option value={18}>১৮টি</option>
-            <option value={24}>২৪টি</option>
+            <option value={36}>৩৬টি</option>
+            <option value={48}>৪৮টি</option>
           </select>
         </div>
       )}
