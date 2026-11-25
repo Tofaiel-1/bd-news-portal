@@ -1,93 +1,86 @@
 /**
  * importanceScoreService.js
- * গুরুত্বভিত্তিক সংবাদ র‌্যাঙ্কিং এবং স্কোরিং সার্ভিস।
- * কৃত্রিম বুদ্ধিমত্তার সীমাবদ্ধতা এড়িয়ে সম্পূর্ণ নিখুঁত গাণিতিক অ্যালগরিদমে 
- * প্রতিটি সংবাদের গুরুত্ব (Importance Score: ০-১০০) নির্ধারণ করে।
+ * গুরুত্ব ও সতেজতা-ভিত্তিক সংবাদ র‌্যাঙ্কিং এবং স্কোরিং সার্ভিস।
+ * আজকের তাজা এবং উচ্চ-গুরুত্বের সংবাদকে সর্বদা শীর্ষ শোকেসে অগ্রাধিকার দেয়।
  */
 
 export const CATEGORY_IMPORTANCE_WEIGHTS = {
-  'জাতীয় রাজনীতি ও প্রশাসন': 18,
-  'অর্থনীতি ও বাণিজ্য': 16,
-  'আইন-আদালত ও অপরাধ': 15,
-  'দুর্যোগ ও আবহাওয়া': 15,
+  'জাতীয় ও রাজনীতি': 18,
+  'বাণিজ্য ও অর্থনীতি': 16,
+  'আইন ও আদালত': 15,
+  'আবহাওয়া ও দুর্যোগ': 15,
   'আন্তর্জাতিক ও বিশ্ব': 14,
   'স্বাস্থ্য ও চিকিৎসা': 13,
   'যোগাযোগ ও পরিবহন': 12,
-  'কৃষি ও পরিবেশ': 11,
-  'শিক্ষা ও চাকরি': 10,
-  'প্রযুক্তি ও উদ্ভাবন': 9,
-  'খেলাধুলা ও বিনোদন': 8,
-  'লাইফস্টাইল ও ধর্ম': 7
+  'কৃষি, প্রকৃতি ও পরিবেশ': 11,
+  'শিক্ষা ও ক্যারিয়ার': 10,
+  'বিজ্ঞান ও প্রযুক্তি': 9,
+  'খেলাধুলা': 8,
+  'বিনোদন ও সংস্কৃতি': 8,
+  'প্রবাস ও ডায়াসপোরা': 8,
+  'ধর্ম ও জীবনযাপন': 7
 };
 
 /**
  * একটি সংবাদের গুরুত্ব স্কোর (০-১০০ স্কেলে) হিসাব করে
- * @param {Object} event - সংবাদ অবজেক্ট
- * @returns {number} - ০ থেকে ১০০ এর মধ্যে পূর্ণসংখ্যা স্কোর
  */
 export function computeImportanceScore(event) {
   if (!event) return 70;
 
-  // বেস ফাউন্ডেশন পয়েন্ট: ১৫
-  let score = 15;
+  let score = 20;
 
-  // ১. সত্যতা যাচাইয়ের মাত্রা / কনফিডেন্স স্কোর (সর্বোচ্চ ৩০ পয়েন্ট)
-  const conf = Number(event.confidence) || 80;
-  score += (conf * 0.30); // 80 -> 24, 99 -> 29.7
-
-  // ২. স্বাধীন গণমাধ্যম উৎসের সংখ্যা (সর্বোচ্চ ২০ পয়েন্ট)
-  const sourceCount = Number(event.independence?.independent_source_count) || 1;
-  score += Math.min(sourceCount * 6.5, 20);
-
-  // ৩. ব্রেকিং নিউজ স্ট্যাটাস বোনাস (১০ পয়েন্ট)
-  if (event.freshness === 'breaking') {
-    score += 10;
-  }
-
-  // ৪. অফিসিয়ালি নিশ্চিত / ভেরিফিকেশন স্ট্যাটাস বোনাস (১০ পয়েন্ট)
-  if (event.status === 'officially_confirmed') {
-    score += 10;
-  } else if (event.status === 'multi_source_match') {
-    score += 7;
-  } else if (event.status === 'conflicting_reports') {
-    score += 5; // অমিল থাকলেও এটি অত্যন্ত আলোচিত
-  }
-
-  // ৫. ক্যাটাগরি গুরুত্ব ওয়েট (সর্বোচ্চ ১৮ পয়েন্ট)
-  const catWeight = CATEGORY_IMPORTANCE_WEIGHTS[event.category] || 10;
+  // ১. ক্যাটাগরি গুরুত্ব ওয়েট (সর্বোচ্চ ১৮ পয়েন্ট)
+  const normalizedCat = (event.category || '').normalize('NFC');
+  const catWeight = CATEGORY_IMPORTANCE_WEIGHTS[normalizedCat] || 10;
   score += catWeight;
 
-  // ৬. রিয়েল-টাইম লাইভ কভারেজ বোনাস (৫ পয়েন্ট)
-  if (event.isLiveRealTime) {
-    score += 5;
+  // ২. মূল পোর্টালের ছবির উপস্থিতি (বড় শোকেসে ভিজ্যুয়াল মান নিশ্চিত করতে +১০)
+  if (event.image_url) {
+    score += 10;
   }
 
-  // ৭. সতেজতা ও সময়ের ব্যালেন্সিং
+  // ৩. রিয়েল-টাইম লাইভ কভারেজ বোনাস (+১৫ পয়েন্ট)
+  if (event.isLiveRealTime) {
+    score += 15;
+  }
+
+  // ৪. ব্রেকিং স্ট্যাটাস বোনাস (+৮ পয়েন্ট)
+  if (event.freshness === 'breaking') {
+    score += 8;
+  }
+
+  // ৫. রুট টাইমস্ট্যাম্প অনুযায়ী সতেজতা বোনাস (পুরোনো দিনের খবর যাতে আজকের শীর্ষ খবর না দখল করে)
   if (event.published_at) {
     try {
       const pubTime = new Date(event.published_at).getTime();
-      const now = Date.now();
-      const diffHours = (now - pubTime) / (1000 * 60 * 60);
-
-      if (diffHours <= 6) {
-        score += 4; // অতি তাজা খবর
-      } else if (diffHours <= 12) {
-        score += 2;
+      if (!isNaN(pubTime)) {
+        const diffHours = (Date.now() - pubTime) / (1000 * 60 * 60);
+        if (diffHours <= 2) {
+          score += 28;
+        } else if (diffHours <= 6) {
+          score += 22;
+        } else if (diffHours <= 12) {
+          score += 16;
+        } else if (diffHours <= 24) {
+          score += 10;
+        } else if (diffHours <= 48) {
+          score += 2;
+        } else {
+          score -= 20;
+        }
       }
     } catch {
-      // ডেট পার্সিং নো-অপ
+      // ignore
     }
   }
 
-  // স্কোরকে সর্বনিম্ন ৬০ এবং সর্বোচ্চ ৯৯-এর মধ্যে সীমাবদ্ধ রাখা
-  const finalScore = Math.min(Math.max(Math.round(score), 60), 99);
-  return finalScore;
+  // ৬. বিশ্বাসযোগ্যতা ও সোর্স গুণমান (+৭ পর্যন্ত)
+  const conf = Number(event.confidence) || 85;
+  score += (conf * 0.07);
+
+  return Math.min(Math.max(Math.round(score), 55), 99);
 }
 
-/**
- * গুরুত্ব স্কোরের লেবেল ও থিম কালার রিটার্ন করে
- * @param {number} score
- */
 export function getImportanceBadge(score) {
   if (score >= 95) {
     return {
@@ -120,7 +113,7 @@ export function getImportanceBadge(score) {
     };
   }
   return {
-    labelBn: 'নজরে রাখুন',
+    labelBn: 'আলোচিত',
     tier: 'bronze',
     badgeClass: 'bg-amber-600 text-white border-amber-400',
     pillClass: 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800',
@@ -130,24 +123,24 @@ export function getImportanceBadge(score) {
 }
 
 /**
- * সংবাদ তালিকা থেকে সেরা গুরুত্বের N-সংখ্যক সংবাদ বাছাই
- * @param {Array} events - সকল সংবাদ ইভেন্ট
- * @param {number} count - কতটি টপ নিউজ প্রয়োজন (ডিফল্ট: ৭টি)
- * @returns {Array} - স্কোরে সাজানো টপ নিউজ তালিকা
+ * সংবাদ তালিকা থেকে সেরা গুরুত্ব ও সতেজতার N-সংখ্যক সংবাদ বাছাই
  */
 export function getTopImportantNews(events, count = 7) {
   if (!Array.isArray(events) || events.length === 0) return [];
 
-  // ১. প্রতিটি সংবাদের গুরুত্ব স্কোর নির্ধারণ
   const scoredEvents = events.map(evt => ({
     ...evt,
     importanceScore: computeImportanceScore(evt)
   }));
 
-  // ২. গুরুত্ব স্কোর অনুসারে বড় থেকে ছোট ক্রমানুসারে সাজানো
-  scoredEvents.sort((a, b) => b.importanceScore - a.importanceScore);
+  // গুরুত্ব স্কোর (এবং সমান হলে প্রকাশিত সময়) অনুসারে সাজানো
+  scoredEvents.sort((a, b) => {
+    if (b.importanceScore !== a.importanceScore) {
+      return b.importanceScore - a.importanceScore;
+    }
+    return new Date(b.published_at || 0) - new Date(a.published_at || 0);
+  });
 
-  // ৩. ডুপ্লিকেট শিরোনাম দূর করে অনন্য সংবাদ বাছাই
   const uniqueTop = [];
   const seenTitles = new Set();
 

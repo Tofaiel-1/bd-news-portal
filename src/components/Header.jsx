@@ -1,59 +1,56 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  MapPin, 
-  Search, 
-  Bookmark, 
-  FileText, 
-  ShieldCheck, 
-  SlidersHorizontal, 
-  Clock, 
-  ChevronDown, 
-  Sparkles, 
-  Menu, 
-  X, 
-  Radio, 
-  Flame, 
-  Tv, 
-  Sun, 
+import {
+  Search,
+  FileText,
+  ShieldCheck,
+  Menu,
+  X,
+  Radio,
+  Flame,
+  Tv,
+  Sun,
   Moon,
   Globe
 } from 'lucide-react';
 import FontSizeController from './FontSizeController';
+import { toBanglaNumber, getBanglaTodayDateString } from '../utils/dateUtils';
 
-// বাংলা সংখ্যা রূপান্তর
-export const toBanglaNumber = (num) => {
-  const bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
-  return String(num).replace(/[0-9]/g, (d) => bnDigits[d]);
-};
+export { toBanglaNumber };
 
 export default function Header({
   selectedScope = 'all',
   onSelectScope,
   onOpenSearchModal,
-  onOpenVerificationLab,
   onOpenBriefingModal,
   onOpenLiveTvModal,
   onOpenRadio,
   onOpenShorts,
-  activeFilterCount = 0,
   isDarkMode = false,
   onToggleDarkMode
 }) {
-  const [currentTime, setCurrentTime] = useState('');
+  const [currentTime, setCurrentTime] = useState(() => {
+    const now = new Date();
+    const dateStr = getBanglaTodayDateString(now);
+    const timeStr = now.toLocaleTimeString('bn-BD', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: 'Asia/Dhaka'
+    });
+    return `${dateStr} | ${timeStr}`;
+  });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // লাইভ বাংলা ঘড়ি ও ক্যালেন্ডার আপডেট
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
-      const options = { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-      };
-      const dateStr = now.toLocaleDateString('bn-BD', options);
-      const timeStr = now.toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit', hour12: true });
+      const dateStr = getBanglaTodayDateString(now);
+      const timeStr = now.toLocaleTimeString('bn-BD', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+        timeZone: 'Asia/Dhaka'
+      });
       setCurrentTime(`${dateStr} | ${timeStr}`);
     };
 
@@ -64,13 +61,13 @@ export default function Header({
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 dark:bg-stone-900/95 backdrop-blur-md border-b border-stone-200 dark:border-stone-800 shadow-sm transition-colors">
-      {/* শীর্ষ ইউটিলিটি বার: লাইভ সময়, নীতিবাক্য ও ডায়াসপোরা ব্রিফিং */}
-      <div className="bg-stone-900 text-stone-300 text-xs py-1.5 px-4 sm:px-6">
+      {/* শীর্ষ ইউটিলিটি বার */}
+      <div className="bg-stone-900 dark:bg-stone-950 text-stone-300 text-xs py-1.5 px-4 sm:px-6 border-b border-stone-800">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2 font-sans">
-            <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span className="hidden sm:inline text-stone-300 font-bold">লাইভ আপডেট:</span>
-            <span className="text-white font-semibold text-xs sm:text-sm">{currentTime || 'বুধবার, ১৮ নভেম্বর ২০২৬'}</span>
+            <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="hidden sm:inline text-stone-300 font-bold">ঢাকা সময়:</span>
+            <span className="text-white font-semibold text-xs sm:text-sm">{currentTime}</span>
           </div>
 
           <div className="flex items-center gap-4 text-xs sm:text-sm font-sans">
@@ -79,7 +76,7 @@ export default function Header({
             </span>
             <button
               onClick={onOpenBriefingModal}
-              className="text-emerald-400 hover:text-emerald-300 font-bold flex items-center gap-1.5 transition-colors"
+              className="text-emerald-400 hover:text-emerald-300 font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <FileText className="w-4 h-4" />
               <span>দৈনিক সংবাদ বুলেটিন</span>
@@ -90,12 +87,10 @@ export default function Header({
 
       {/* প্রধান ব্র্যান্ড ও অ্যাকশন হেডার */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between gap-4">
-        {/* ব্র্যান্ড লোগো */}
         <div className="flex items-center gap-3">
           <a href="#" className="flex items-center gap-2.5 group">
-            {/* বাংলাদেশের পতাকার আদলে নান্দনিক মনোগ্রাম */}
             <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-700 to-emerald-900 flex items-center justify-center shadow-md shadow-emerald-900/20 group-hover:scale-105 transition-transform">
-              <div className="w-4 h-4 rounded-full bg-red-600 shadow-inner"></div>
+              <div className="w-4 h-4 rounded-full bg-red-600 shadow-inner" />
               <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-amber-400 border-2 border-white dark:border-stone-900 flex items-center justify-center">
                 <ShieldCheck className="w-2.5 h-2.5 text-stone-900" />
               </div>
@@ -107,7 +102,7 @@ export default function Header({
                   আমার বাংলাদেশ
                 </span>
                 <span className="px-2 py-0.5 rounded-md text-xs font-bold uppercase tracking-wider bg-emerald-100 dark:bg-emerald-950 text-emerald-900 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
-                  যাচাইকৃত
+                  লাইভ
                 </span>
               </div>
               <p className="text-xs sm:text-[13px] font-semibold text-stone-600 dark:text-stone-400 font-sans mt-0.5">
@@ -127,7 +122,7 @@ export default function Header({
                 : 'text-stone-700 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700'
             }`}
           >
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             <span>🇧🇩 সারাদেশ (বাংলাদেশ)</span>
           </button>
 
@@ -146,7 +141,7 @@ export default function Header({
           {selectedScope !== 'all' && (
             <button
               onClick={() => onSelectScope('all')}
-              className="text-[11px] font-bold text-stone-500 hover:text-stone-700 dark:text-stone-400 dark:hover:text-stone-200 px-2 py-1 rounded-lg hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
+              className="text-[11px] font-bold text-stone-500 hover:text-stone-700 dark:text-stone-400 dark:hover:text-stone-200 px-2 py-1 rounded-lg hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors cursor-pointer"
               title="সব খবর দেখুন"
             >
               সব খবর
@@ -156,20 +151,17 @@ export default function Header({
 
         {/* ডানদিকের প্রধান অ্যাকশনসমূহ */}
         <div className="flex items-center gap-2">
-          {/* ফন্ট সাইজ স্কেলার উইজেট */}
           <FontSizeController />
 
-          {/* ডার্ক মোড / লাইট মোড টগল বাটন */}
           <button
             onClick={onToggleDarkMode}
             className="p-2 rounded-xl bg-stone-100 hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 transition-colors border border-stone-200 dark:border-stone-700 flex items-center justify-center cursor-pointer active:scale-95 shadow-sm"
             title={isDarkMode ? 'লাইট মোড চালু করুন' : 'ডার্ক মোড চালু করুন'}
             aria-label="Toggle Theme"
           >
-            {isDarkMode ? <Sun className="w-4 h-4 text-amber-400 animate-spin-slow" /> : <Moon className="w-4 h-4 text-stone-700" />}
+            {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-stone-700" />}
           </button>
 
-          {/* ৬০-সেকেন্ড শর্টস বাটন */}
           {onOpenShorts && (
             <button
               onClick={onOpenShorts}
@@ -181,7 +173,6 @@ export default function Header({
             </button>
           )}
 
-          {/* লাইভ রেডিও বুলেটিন বাটন */}
           {onOpenRadio && (
             <button
               onClick={onOpenRadio}
@@ -193,30 +184,27 @@ export default function Header({
             </button>
           )}
 
-          {/* লাইভ টিভি বাটন */}
           <button
             onClick={onOpenLiveTvModal}
-            className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl bg-stone-900 text-white hover:bg-stone-800 text-xs font-bold shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
+            className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl bg-stone-900 dark:bg-stone-800 text-white hover:bg-stone-800 dark:hover:bg-stone-700 border border-transparent dark:border-stone-700 text-xs font-bold shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
             title="বাংলাদেশের শীর্ষ টিভি চ্যানেল সরাসরি দেখুন"
           >
             <Tv className="w-3.5 h-3.5 text-red-500" />
             <span>টিভি</span>
           </button>
 
-          {/* সার্চ বাটন */}
           <button
             onClick={onOpenSearchModal}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-stone-100 hover:bg-stone-200/80 text-stone-700 text-xs font-medium transition-colors border border-stone-200 cursor-pointer"
+            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-stone-100 hover:bg-stone-200/80 dark:bg-stone-800 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 text-xs font-medium transition-colors border border-stone-200 dark:border-stone-700 cursor-pointer"
             title="উপজেলা বা বিষয় অনুসন্ধান"
           >
-            <Search className="w-4 h-4 text-stone-500" />
+            <Search className="w-4 h-4 text-stone-500 dark:text-stone-400" />
             <span className="hidden sm:inline">খুঁজুন</span>
           </button>
 
-          {/* মোবাইল মেনু টগল */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 rounded-xl md:hidden text-stone-700 hover:bg-stone-100"
+            className="p-2 rounded-xl md:hidden text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800"
             aria-label="মোবাইল মেনু"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -264,7 +252,7 @@ export default function Header({
               }}
               className="p-2.5 rounded-lg bg-red-600 text-white font-bold flex items-center justify-center gap-1.5 shadow-sm"
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
               লাইভ টিভি দেখুন
             </button>
             <button
@@ -272,9 +260,9 @@ export default function Header({
                 setMobileMenuOpen(false);
                 onOpenSearchModal();
               }}
-              className="p-2.5 rounded-lg bg-stone-100 text-stone-800 font-medium flex items-center justify-center gap-1.5 border border-stone-200"
+              className="p-2.5 rounded-lg bg-stone-100 dark:bg-stone-800 text-stone-800 dark:text-stone-200 font-medium flex items-center justify-center gap-1.5 border border-stone-200 dark:border-stone-700"
             >
-              <Search className="w-4 h-4 text-stone-600" />
+              <Search className="w-4 h-4 text-stone-600 dark:text-stone-400" />
               অনুসন্ধান
             </button>
             <button
@@ -282,11 +270,23 @@ export default function Header({
                 setMobileMenuOpen(false);
                 onOpenBriefingModal();
               }}
-              className="p-2.5 rounded-lg bg-stone-100 text-stone-800 font-medium flex items-center justify-center gap-1.5 border border-stone-200"
+              className="p-2.5 rounded-lg bg-stone-100 dark:bg-stone-800 text-stone-800 dark:text-stone-200 font-medium flex items-center justify-center gap-1.5 border border-stone-200 dark:border-stone-700"
             >
-              <FileText className="w-4 h-4 text-stone-600" />
+              <FileText className="w-4 h-4 text-stone-600 dark:text-stone-400" />
               দৈনিক বুলেটিন
             </button>
+            {onOpenRadio && (
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onOpenRadio();
+                }}
+                className="p-2.5 rounded-lg bg-indigo-700 text-white font-bold flex items-center justify-center gap-1.5 shadow-sm"
+              >
+                <Radio className="w-4 h-4" />
+                লাইভ রেডিও
+              </button>
+            )}
           </div>
         </div>
       )}

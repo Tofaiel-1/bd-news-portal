@@ -176,26 +176,25 @@ export async function getCompleteDistrictNewsCoverage(dateKey = null) {
         dateKey: activeDateKey
       }));
 
-    // যদি আজকের দিনে বেসলাইন খালি থাকে (নতুন যেকোনো তারিখে ভিজিটর ঢুকলে),
-    // তাহলে সমৃদ্ধ অভিজ্ঞতার জন্য ভেরিফাইড ডাটাবেজ ব্যাকআপ হিসেবে আজকের তালিকায় যুক্ত হবে
-    if (isToday && filteredBaseline.length === 0) {
-      filteredBaseline = REAL_MEDIA_NEWS_DATA.slice(0, 150).map(evt => ({
-        ...evt,
-        dateKey: todayKey
-      }));
-    }
+    // লাইভ পোর্টাল না চললে বা অফলাইন অবস্থায় কেবল ব্যাকআপ সংবাদ দেখাবে;
+    // রিয়েল-টাইম লাইভ সংবাদ থাকলে পুরোনো দিনের আর্কাইভকে আজকের তারিখ হিসেবে মিশ্রিত করা হবে না
   }
 
-  // ২. যদি আজকের তারিখ হয়, তবেই কেবল লাইভ আরএসএস (প্রথম আলো + বিবিসি বাংলা) নতুন আপডেট ফেচ
+  // ২. যদি আজকের তারিখ হয়, তবে লাইভ আরএসএস/এপিআই থেকে তাজা সংবাদ ফেচ
   let liveRss = [];
   if (isToday) {
     try {
       liveRss = await fetchLiveRssNews();
-      liveRss.forEach(item => {
-        item.dateKey = todayKey;
-      });
     } catch (e) {
       console.warn('Live RSS integration in coverage service:', e);
+    }
+
+    // লাইভ এপিআই ব্যর্থ হলে বা খুবই কম আইটেম (< ১২) থাকলে ব্যাকআপ বেসলাইন ব্যবহার
+    if (filteredBaseline.length === 0 && liveRss.length < 12) {
+      filteredBaseline = REAL_MEDIA_NEWS_DATA.slice(0, 60).map(evt => ({
+        ...evt,
+        dateKey: evt.published_at ? evt.published_at.slice(0, 10) : todayKey
+      }));
     }
   }
 

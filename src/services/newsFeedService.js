@@ -1,53 +1,24 @@
 /**
  * newsFeedService.js
- * বাংলাদেশের শীর্ষ টিভি চ্যানেল ও জাতীয় গণমাধ্যম থেকে সরাসরি সংবাদ সংগ্রহ, 
- * মাল্টি-সোর্স ভেরিফিকেশন এবং প্রতি ১ মিনিটে রিয়েল-টাইম অটো-আপডেট ইঞ্জিন।
+ * বাংলাদেশের শীর্ষ জাতীয় ও আন্তর্জাতিক গণমাধ্যম থেকে সরাসরি সংবাদ সংগ্রহ
+ * এবং চ্যানেল মেটাডাটা ব্যবস্থাপনা ইঞ্জিন।
  */
 
-import { INITIAL_NEWS_EVENTS } from '../data/newsData.js';
 import { REAL_MEDIA_NEWS_DATA } from '../data/realMediaNewsData.js';
 import { fetchLiveRssNews } from './liveRssService.js';
-import {
-  ZILLA_WISE_TODAY_NEWS,
-  getTodayTimestamp,
-  getTodayTimeLabel,
-  getSemanticNewsImage,
-  VERIFIED_NEWS_IMAGES
-} from './newsCrawlerService.js';
+import { getAccurateTimeAgo } from '../utils/dateUtils.js';
 
-// শীর্ষ টিভি চ্যানেল ও প্রধান গণমাধ্যমের মেটাডাটা
+// সক্রিয় শীর্ষ গণমাধ্যম পোর্টাল ও চ্যানেলের তালিকা (লাইভ ও আর্কাইভের সাথে শতভাগ মিল)
 export const TOP_TV_CHANNELS = [
   {
     id: 'all',
-    nameBn: 'সব গণমাধ্যম ও টিভি',
+    nameBn: 'সব গণমাধ্যম ও পোর্টাল',
     nameEn: 'All Channels',
     color: '#10B981',
     accentGradient: 'from-emerald-500 to-teal-600',
-    logoText: '🌐 সকল গণমাধ্যম',
+    logoText: '🌐',
     type: 'all',
     isLive: true
-  },
-  {
-    id: 'dailystar',
-    nameBn: 'দ্য ডেইলি স্টার',
-    nameEn: 'The Daily Star',
-    color: '#1E3A8A',
-    accentGradient: 'from-blue-700 to-indigo-950',
-    logoText: '⭐ দ্য ডেইলি স্টার',
-    type: 'national_press',
-    isLive: true,
-    website: 'https://bangla.thedailystar.net'
-  },
-  {
-    id: 'bdnews24',
-    nameBn: 'বিডিনিউজ ২৪',
-    nameEn: 'bdnews24',
-    color: '#DC2626',
-    accentGradient: 'from-red-600 to-rose-700',
-    logoText: '🔴 বিডিনিউজ ২৪',
-    type: 'national_press',
-    isLive: true,
-    website: 'https://bangla.bdnews24.com'
   },
   {
     id: 'prothomalo',
@@ -55,34 +26,54 @@ export const TOP_TV_CHANNELS = [
     nameEn: 'Prothom Alo',
     color: '#0284C7',
     accentGradient: 'from-sky-600 to-blue-800',
-    logoText: '📰 প্রথম আলো',
+    logoText: '📰',
     type: 'national_press',
     isLive: true,
-    website: 'https://prothomalo.com'
+    website: 'https://www.prothomalo.com'
   },
   {
-    id: 'jamunatv',
-    nameBn: 'যমুনা টিভি',
-    nameEn: 'Jamuna TV',
-    color: '#0284C7',
-    accentGradient: 'from-sky-500 to-blue-600',
-    logoText: '⚡ যমুনা টিভি',
-    type: 'tv',
+    id: 'bdnews24',
+    nameBn: 'বিডিনিউজ ২৪',
+    nameEn: 'bdnews24',
+    color: '#DC2626',
+    accentGradient: 'from-red-600 to-rose-700',
+    logoText: '🔴',
+    type: 'national_press',
     isLive: true,
-    youtubeLiveId: 'mN3N1u_e_vE',
-    website: 'https://jamuna.tv'
+    website: 'https://bangla.bdnews24.com'
   },
   {
-    id: 'somoytv',
-    nameBn: 'সময় টিভি',
-    nameEn: 'Somoy TV',
-    color: '#E11D48',
-    accentGradient: 'from-rose-500 to-red-600',
-    logoText: '🔴 সময় টিভি',
-    type: 'tv',
+    id: 'ittefaq',
+    nameBn: 'দৈনিক ইত্তেফাক',
+    nameEn: 'The Daily Ittefaq',
+    color: '#D97706',
+    accentGradient: 'from-amber-600 to-orange-700',
+    logoText: '🗞️',
+    type: 'national_press',
     isLive: true,
-    youtubeLiveId: 'P_B3h1Y5iLg',
-    website: 'https://somoynews.tv'
+    website: 'https://www.ittefaq.com.bd'
+  },
+  {
+    id: 'banglatribune',
+    nameBn: 'বাংলা ট্রিবিউন',
+    nameEn: 'Bangla Tribune',
+    color: '#0D9488',
+    accentGradient: 'from-teal-600 to-emerald-700',
+    logoText: '⚡',
+    type: 'national_press',
+    isLive: true,
+    website: 'https://www.banglatribune.com'
+  },
+  {
+    id: 'deshrupantor',
+    nameBn: 'দেশ রূপান্তর',
+    nameEn: 'Desh Rupantor',
+    color: '#059669',
+    accentGradient: 'from-emerald-600 to-green-700',
+    logoText: '📌',
+    type: 'national_press',
+    isLive: true,
+    website: 'https://www.deshrupantor.com'
   },
   {
     id: 'bbcbangla',
@@ -90,133 +81,66 @@ export const TOP_TV_CHANNELS = [
     nameEn: 'BBC Bangla',
     color: '#B91C1C',
     accentGradient: 'from-red-600 to-rose-800',
-    logoText: '🌍 বিবিসি বাংলা',
+    logoText: '🌍',
+    type: 'international_press',
+    isLive: true,
+    website: 'https://www.bbc.com/bengali'
+  },
+  {
+    id: 'channelionline',
+    nameBn: 'চ্যানেল আই অনলাইন',
+    nameEn: 'Channel i Online',
+    color: '#10B981',
+    accentGradient: 'from-emerald-500 to-teal-700',
+    logoText: '📺',
+    type: 'tv_media',
+    isLive: true,
+    website: 'https://www.channelionline.com'
+  },
+  {
+    id: 'dailystar',
+    nameBn: 'দ্য ডেইলি স্টার',
+    nameEn: 'The Daily Star',
+    color: '#1E3A8A',
+    accentGradient: 'from-blue-700 to-indigo-950',
+    logoText: '⭐',
     type: 'national_press',
     isLive: true,
-    website: 'https://bbc.com/bengali'
-  },
-  {
-    id: 'channel24',
-    nameBn: 'চ্যানেল ২৪',
-    nameEn: 'Channel 24',
-    color: '#4F46E5',
-    accentGradient: 'from-indigo-500 to-violet-600',
-    logoText: '📺 চ্যানেল ২৪',
-    type: 'tv',
-    isLive: true,
-    youtubeLiveId: 'sF3L2w1xQzA',
-    website: 'https://channel24bd.tv'
-  },
-  {
-    id: 'independent',
-    nameBn: 'ইন্ডিপেন্ডেন্ট টিভি',
-    nameEn: 'Independent TV',
-    color: '#059669',
-    accentGradient: 'from-emerald-600 to-green-700',
-    logoText: '📡 ইন্ডিপেন্ডেন্ট টিভি',
-    type: 'tv',
-    isLive: true,
-    youtubeLiveId: 'yV9X1u7mK3w',
-    website: 'https://independent24.com'
-  },
-  {
-    id: 'ekattor',
-    nameBn: 'একাত্তর টিভি',
-    nameEn: 'Ekattor TV',
-    color: '#DC2626',
-    accentGradient: 'from-red-600 to-rose-700',
-    logoText: '🔥 একাত্তর টিভি',
-    type: 'tv',
-    isLive: true,
-    youtubeLiveId: 'kP9Q7vXyZ1w',
-    website: 'https://ekattor.tv'
-  },
-  {
-    id: 'rtv',
-    nameBn: 'আরটিভি নিউজ',
-    nameEn: 'Rtv News',
-    color: '#059669',
-    accentGradient: 'from-emerald-600 to-teal-700',
-    logoText: '🎬 আরটিভি নিউজ',
-    type: 'tv',
-    isLive: true,
-    website: 'https://rtvonline.com'
+    website: 'https://bangla.thedailystar.net'
   }
 ];
 
-// ইমেজ লাইব্রেরি বিভিন্ন ক্যাটাগরির জন্য (১০০% আসল পোর্টাল ফটো)
-const CATEGORY_IMAGES = {
-  'দুর্যোগ ও আবহাওয়া': VERIFIED_NEWS_IMAGES.weather,
-  'বাণিজ্য ও অর্থনীতি': VERIFIED_NEWS_IMAGES.commerce,
-  'যানজট ও পরিবহন': VERIFIED_NEWS_IMAGES.transport,
-  'কৃষি ও পরিবেশ': VERIFIED_NEWS_IMAGES.agriculture,
-  'প্রযুক্তি ও শিক্ষা': VERIFIED_NEWS_IMAGES.education,
-  'স্বাস্থ্য ও কল্যাণ': VERIFIED_NEWS_IMAGES.health,
-  'আইনশৃঙ্খলা': VERIFIED_NEWS_IMAGES.law_order,
-  'ক্রীড়া': VERIFIED_NEWS_IMAGES.sports
-};
-
-// চ্যানেল অনুযায়ী ডাইনামিক সোর্স জেনারেশন
 export const getChannelMetadata = (channelId) => {
-  return TOP_TV_CHANNELS.find(c => c.id === channelId) || TOP_TV_CHANNELS[1]; // default Prothom Alo
+  return TOP_TV_CHANNELS.find(c => c.id === channelId) || TOP_TV_CHANNELS[1];
 };
 
 /**
- * ১ মিনিট পর পর নতুন লাইভ নিউজ জেনারেট বা ফেচ করার ফাংশন
+ * লাইভ আপডেট ফেচিং (মূল পোর্টালের রুট টাইমস্ট্যাম্প অক্ষুণ্ণ রেখে)
  */
-let updateCounter = 0;
-
 export async function fetchLiveNewsUpdates() {
-  updateCounter += 1;
   const now = new Date();
-
-  // ১. সরাসরি রিয়েল-টাইম আরএসএস থেকে তাজা খবর সংগ্রহের চেষ্টা
   try {
     const liveItems = await fetchLiveRssNews();
     if (Array.isArray(liveItems) && liveItems.length > 0) {
-      const topFresh = liveItems[updateCounter % Math.min(liveItems.length, 10)];
-      if (topFresh && topFresh.canonical_bangla_title) {
-        return {
-          newEvent: {
-            ...topFresh,
-            id: `live-fresh-${Date.now()}-${updateCounter}`,
-            time_ago: 'এইমাত্র (লাইভ ১ মিনিট আপডেট)',
-            isRealtimeUpdate: true,
-            freshness: 'breaking'
-          },
-          timestamp: now
-        };
-      }
+      return {
+        liveItems,
+        newEvent: liveItems[0],
+        timestamp: now
+      };
     }
   } catch {
-    // ফলব্যাকে যাওয়া
+    // নীরব হ্যান্ডলিং
   }
 
-  // ২. ফলব্যাক: রিয়েল মিডিয়া ডাটাবেজ থেকে আসল নিউজ
-  const poolItem = REAL_MEDIA_NEWS_DATA[updateCounter % REAL_MEDIA_NEWS_DATA.length];
-
-  const newEventId = `live-real-update-${Date.now()}-${updateCounter}`;
-
-  const newNewsEvent = {
-    ...poolItem,
-    id: newEventId,
-    canonical_bangla_title: `[তাজা আপডেট] ${poolItem.canonical_bangla_title}`,
-    published_at: now.toISOString(),
-    time_ago: 'এইমাত্র (লাইভ ১ মিনিট আপডেট)',
-    isRealtimeUpdate: true,
-    status: 'officially_confirmed',
-    confidence: 99,
-    freshness: 'breaking'
-  };
-
   return {
-    newEvent: newNewsEvent,
+    liveItems: [],
+    newEvent: null,
     timestamp: now
   };
 }
 
 /**
- * প্রাথমিক নিউজ ডাটাতে টিভি চ্যানেল ট্যাগ যুক্ত করা ও জেলাভিত্তিক আজকের তাজা সংবাদ একত্রিত করা
+ * প্রাথমিক নিউজ ডাটাতে চ্যানেল মেটাডাটা নিশ্চিতকরণ ও ডুপ্লিকেট দূরীকরণ
  */
 export function enrichNewsWithChannels(events = []) {
   const seenTitles = new Set();
@@ -230,6 +154,7 @@ export function enrichNewsWithChannels(events = []) {
     uniqueList.push({
       ...evt,
       dateKey: evt.dateKey || (evt.published_at ? evt.published_at.slice(0, 10) : new Date().toISOString().slice(0, 10)),
+      time_ago: getAccurateTimeAgo(evt.published_at, evt.time_ago),
       sourceType: evt.sourceType || 'national_press',
       sourceChannel: evt.sourceChannel || {
         id: evt.primarySource?.id || 'prothomalo',
@@ -243,7 +168,7 @@ export function enrichNewsWithChannels(events = []) {
         nameBn: 'প্রথম আলো',
         color: '#0284C7',
         verified: true,
-        website: 'https://prothomalo.com'
+        website: 'https://www.prothomalo.com'
       }
     });
   }

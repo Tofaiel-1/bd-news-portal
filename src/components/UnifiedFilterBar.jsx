@@ -1,25 +1,15 @@
 import React from 'react';
-import { 
-  ShieldCheck, 
-  MapPin, 
-  AlertOctagon, 
-  Flame, 
-  Calendar, 
-  Filter, 
-  X, 
-  Globe, 
-  Tv, 
-  Layers, 
-  ChevronDown,
-  Sparkles,
-  Radio
+import {
+  ShieldCheck,
+  MapPin,
+  Flame,
+  X,
+  Globe
 } from 'lucide-react';
 import { CATEGORIES } from '../data/locations';
 import { getPastDaysList, formatDateKey } from '../services/districtNewsCoverageService';
 import { TOP_TV_CHANNELS } from '../services/newsFeedService';
-
-const bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
-const toBn = (n) => String(n ?? 0).replace(/[0-9]/g, d => bnDigits[d]);
+import { toBanglaNumber } from '../utils/dateUtils';
 
 const CATEGORY_EMOJIS = {
   all: '🌐',
@@ -54,23 +44,22 @@ export default function UnifiedFilterBar({
   activeChannelId,
   onSelectChannel,
   onResetAllFilters,
-  activeFilterCount = 0
+  activeFilterCount = 0,
+  todayLiveCount = 0
 }) {
   const daysList = getPastDaysList(7);
   const todayKey = formatDateKey(new Date());
 
   return (
-    <div className="bg-white dark:bg-stone-900 rounded-2xl border border-stone-200/90 dark:border-stone-800 p-2 sm:p-3 shadow-sm space-y-2.5 transition-all">
-      {/* ১ম লাইন: মূল ফিড সুইচ ট্যাব (সারাদেশ ও আন্তর্জাতিক ফোকাসড) */}
+    <div className="bg-white dark:bg-stone-900 rounded-2xl border border-stone-200/90 dark:border-stone-800 p-2.5 sm:p-3.5 shadow-sm space-y-2.5 transition-all">
+      {/* ১ম লাইন: মূল ফিড সুইচ ট্যাব */}
       <div className="flex items-center justify-between gap-3">
-        {/* প্রধান ৫টি ফিড ট্যাব */}
         <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-1 sm:pb-0 w-full sm:w-auto">
           {[
             { id: 'all_verified', labelBn: 'সকল খবর', icon: ShieldCheck },
             { id: 'bangladesh', labelBn: 'সারাদেশ', icon: MapPin },
             { id: 'international', labelBn: 'আন্তর্জাতিক', icon: Globe },
-            { id: 'breaking', labelBn: 'ব্রেকিং', icon: Flame, badge: 'লাইভ' },
-            { id: 'disputed', labelBn: 'ফ্যাক্ট-চেক', icon: AlertOctagon }
+            { id: 'breaking', labelBn: 'ব্রেকিং', icon: Flame, badge: 'লাইভ' }
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeFeedTab === tab.id;
@@ -88,7 +77,7 @@ export default function UnifiedFilterBar({
                 <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-emerald-400' : 'text-stone-500 dark:text-stone-400'}`} />
                 <span>{tab.labelBn}</span>
                 {tab.badge && (
-                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                  <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
                     isActive ? 'bg-red-500 text-white' : 'bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300'
                   }`}>
                     {tab.badge}
@@ -100,13 +89,13 @@ export default function UnifiedFilterBar({
         </div>
       </div>
 
-      {/* ২য় লাইন: স্লিম স্মার্ট ড্রপডাউন ফিল্টারসমূহ (পরিধি, বিষয়, মাধ্যম, চ্যানেল ও তারিখ) */}
-      <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pt-1 border-t border-stone-100 dark:border-stone-800 text-xs">
+      {/* ২য় লাইন: স্লিম স্মার্ট ড্রপডাউন ফিল্টারসমূহ */}
+      <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pt-2 border-t border-stone-100 dark:border-stone-800 text-xs">
         <span className="text-stone-500 dark:text-stone-400 font-bold hidden md:inline whitespace-nowrap mr-1">
           ফিল্টার করুন:
         </span>
 
-        {/* পরিধি ড্রপডাউন (সারাদেশ / আন্তর্জাতিক) */}
+        {/* পরিধি ড্রপডাউন */}
         <div className="relative flex-shrink-0">
           <select
             value={selectedScope}
@@ -114,7 +103,7 @@ export default function UnifiedFilterBar({
             className={`px-3 py-1.5 rounded-xl border text-xs font-bold outline-none cursor-pointer transition-colors ${
               selectedScope !== 'all'
                 ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-400 dark:border-emerald-600 text-emerald-900 dark:text-emerald-300 font-extrabold'
-                : 'bg-stone-50 dark:bg-stone-800 border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-750'
+                : 'bg-stone-50 dark:bg-stone-800 border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700'
             }`}
           >
             <option value="all">🌐 সকল পরিধি (সারাদেশ ও বিশ্ব)</option>
@@ -123,7 +112,7 @@ export default function UnifiedFilterBar({
           </select>
         </div>
 
-        {/* ক্যাটাগরি ড্রপডাউন (১৪টি বিষয় ও লাইভ সংখ্যা ব্যাজ) */}
+        {/* ক্যাটাগরি ড্রপডাউন */}
         <div className="relative flex-shrink-0">
           <select
             value={selectedCategory}
@@ -131,16 +120,17 @@ export default function UnifiedFilterBar({
             className={`px-3 py-1.5 rounded-xl border text-xs font-bold outline-none cursor-pointer transition-colors ${
               selectedCategory !== 'all'
                 ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-400 dark:border-emerald-600 text-emerald-900 dark:text-emerald-300 font-extrabold'
-                : 'bg-stone-50 dark:bg-stone-800 border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-750'
+                : 'bg-stone-50 dark:bg-stone-800 border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700'
             }`}
           >
-            <option value="all">📂 সকল ক্যাটাগরি ({toBn(categoryCounts.all || 0)})</option>
+            <option value="all">📂 সকল ক্যাটাগরি ({toBanglaNumber(categoryCounts.all || 0)})</option>
             {CATEGORIES.filter(c => c.id !== 'all').map(cat => {
-              const count = categoryCounts[cat.nameBn] || 0;
+              const normKey = cat.nameBn.normalize('NFC');
+              const count = categoryCounts[normKey] || 0;
               const emoji = CATEGORY_EMOJIS[cat.id] || '📁';
               return (
-                <option key={cat.id} value={cat.nameBn}>
-                  {emoji} {cat.nameBn} {count > 0 ? `(${toBn(count)})` : ''}
+                <option key={cat.id} value={normKey}>
+                  {emoji} {cat.nameBn} {count > 0 ? `(${toBanglaNumber(count)})` : ''}
                 </option>
               );
             })}
@@ -155,17 +145,17 @@ export default function UnifiedFilterBar({
             className={`px-3 py-1.5 rounded-xl border text-xs font-bold outline-none cursor-pointer transition-colors ${
               selectedSourceType !== 'all'
                 ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-400 dark:border-emerald-600 text-emerald-900 dark:text-emerald-300 font-extrabold'
-                : 'bg-stone-50 dark:bg-stone-800 border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-750'
+                : 'bg-stone-50 dark:bg-stone-800 border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700'
             }`}
           >
             <option value="all">🌐 সকল মাধ্যম</option>
-            <option value="national_press">📰 জাতীয় প্রেস ও অনলাইন</option>
-            <option value="youtube">📺 টিভি ও ভিডিও রিপোর্ট</option>
-            <option value="facebook_verified">f✓ ভেরিফাইড ব্যুরো পেজ</option>
+            <option value="national_press">📰 জাতীয় সংবাদপত্র ও অনলাইন</option>
+            <option value="international_press">🌍 আন্তর্জাতিক সংবাদ মাধ্যম</option>
+            <option value="tv_media">📺 টেলিভিশন ও ডিজিটাল</option>
           </select>
         </div>
 
-        {/* নির্দিষ্ট গণমাধ্যম পোর্টাল নির্বাচন ড্রপডাউন */}
+        {/* নির্দিষ্ট গণমাধ্যম পোর্টাল ড্রপডাউন */}
         <div className="relative flex-shrink-0">
           <select
             value={activeChannelId}
@@ -173,7 +163,7 @@ export default function UnifiedFilterBar({
             className={`px-3 py-1.5 rounded-xl border text-xs font-bold outline-none cursor-pointer transition-colors ${
               activeChannelId !== 'all'
                 ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-400 dark:border-emerald-600 text-emerald-900 dark:text-emerald-300 font-extrabold'
-                : 'bg-stone-50 dark:bg-stone-800 border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-750'
+                : 'bg-stone-50 dark:bg-stone-800 border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700'
             }`}
           >
             <option value="all">📰 সকল গণমাধ্যম পোর্টাল</option>
@@ -193,18 +183,20 @@ export default function UnifiedFilterBar({
             className={`px-3 py-1.5 rounded-xl border text-xs font-bold outline-none cursor-pointer transition-colors ${
               selectedDateKey !== todayKey
                 ? 'bg-amber-50 dark:bg-amber-950/60 border-amber-400 dark:border-amber-600 text-amber-900 dark:text-amber-300 font-extrabold'
-                : 'bg-stone-50 dark:bg-stone-800 border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-750'
+                : 'bg-stone-50 dark:bg-stone-800 border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700'
             }`}
           >
-            {daysList.map(d => (
-              <option key={d.dateKey} value={d.dateKey}>
-                📅 {d.shortLabel}
-              </option>
-            ))}
+            {daysList.map(d => {
+              const cnt = d.isToday && todayLiveCount > 0 ? todayLiveCount : d.count;
+              return (
+                <option key={d.dateKey} value={d.dateKey}>
+                  📅 {d.shortLabel} {cnt > 0 ? `(${toBanglaNumber(cnt)})` : ''}
+                </option>
+              );
+            })}
           </select>
         </div>
 
-        {/* ফিল্টার রিসেট বাটন */}
         {activeFilterCount > 0 && (
           <button
             onClick={onResetAllFilters}
@@ -212,22 +204,24 @@ export default function UnifiedFilterBar({
             title="সকল ফিল্টার মুছুন"
           >
             <X className="w-3.5 h-3.5" />
-            <span>রিসেট ({activeFilterCount})</span>
+            <span>রিসেট ({toBanglaNumber(activeFilterCount)})</span>
           </button>
         )}
       </div>
 
-      {/* ৩য় লাইন: সকল ক্যাটাগরি এক ক্লিকে দেখার দ্রুত স্ক্রলিং পিলস বার */}
+      {/* ৩য় লাইন: দ্রুত ক্যাটাগরি পিলস */}
       <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pt-2 border-t border-stone-100 dark:border-stone-800 text-xs">
         {CATEGORIES.map(cat => {
-          const isCatActive = (cat.id === 'all' && selectedCategory === 'all') || (selectedCategory === cat.nameBn);
-          const count = cat.id === 'all' ? (categoryCounts.all || 0) : (categoryCounts[cat.nameBn] || 0);
+          const normCat = cat.nameBn.normalize('NFC');
+          const normSelected = (selectedCategory || 'all').normalize('NFC');
+          const isCatActive = (cat.id === 'all' && normSelected === 'all') || (normSelected === normCat);
+          const count = cat.id === 'all' ? (categoryCounts.all || 0) : (categoryCounts[normCat] || 0);
           const emoji = CATEGORY_EMOJIS[cat.id] || '📁';
 
           return (
             <button
               key={cat.id}
-              onClick={() => onSelectCategory(cat.id === 'all' ? 'all' : cat.nameBn)}
+              onClick={() => onSelectCategory(cat.id === 'all' ? 'all' : normCat)}
               className={`px-3 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer shrink-0 border ${
                 isCatActive
                   ? 'bg-emerald-600 text-white border-emerald-500 shadow-sm ring-2 ring-emerald-400/30'
@@ -238,11 +232,11 @@ export default function UnifiedFilterBar({
               <span>{cat.nameBn}</span>
               {count > 0 && (
                 <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                  isCatActive 
-                    ? 'bg-white/20 text-white' 
+                  isCatActive
+                    ? 'bg-white/20 text-white'
                     : 'bg-stone-200 dark:bg-stone-700 text-stone-600 dark:text-stone-300'
                 }`}>
-                  {toBn(count)}
+                  {toBanglaNumber(count)}
                 </span>
               )}
             </button>

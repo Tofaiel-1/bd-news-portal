@@ -7,25 +7,28 @@ const vercelApiDevPlugin = () => ({
   configureServer(server) {
     server.middlewares.use('/api/live-news', async (req, res) => {
       try {
-        const handlerMod = await import('./api/live-news.js');
+        const handlerMod = await server.ssrLoadModule('./api/live-news.js');
         const handler = handlerMod.default;
         const mockRes = {
           setHeader: (k, v) => res.setHeader(k, v),
+          end: (data) => res.end(data),
           status: (code) => {
             res.statusCode = code;
             return {
               json: (data) => {
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                if (!res.headersSent) {
+                  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                }
                 res.end(JSON.stringify(data));
               },
-              end: () => res.end()
+              end: (data) => res.end(data)
             };
           }
         };
         await handler(req, mockRes);
       } catch (e) {
         res.statusCode = 500;
-        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
         res.end(JSON.stringify({ success: false, error: e.message }));
       }
     });

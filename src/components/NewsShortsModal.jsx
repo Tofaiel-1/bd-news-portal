@@ -15,7 +15,7 @@ import {
   Flame
 } from 'lucide-react';
 import { speakBangla, stopSpeech } from '../utils/speechUtils';
-import { toBanglaNumber } from './Header';
+import { toBanglaNumber, getAccurateTimeAgo } from '../utils/dateUtils';
 
 export default function NewsShortsModal({
   isOpen,
@@ -109,6 +109,7 @@ export default function NewsShortsModal({
             <img
               src={currentEvent.image_url}
               alt={currentEvent.canonical_bangla_title}
+              referrerPolicy="no-referrer"
               onError={() => setImgError(true)}
               className="w-full h-full object-cover"
             />
@@ -182,7 +183,7 @@ export default function NewsShortsModal({
             )}
 
             <span className="px-2.5 py-0.5 rounded-md text-xs font-bold bg-white/25 text-white backdrop-blur-md">
-              {currentEvent.time_ago}
+              {getAccurateTimeAgo(currentEvent.published_at, currentEvent.time_ago)}
             </span>
           </div>
 

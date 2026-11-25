@@ -1,28 +1,25 @@
-import React, { useState } from 'react';
-import { 
-  ShieldCheck, 
-  CheckCheck, 
-  Clock, 
-  AlertOctagon, 
-  HelpCircle, 
-  Bookmark, 
-  Share2, 
-  ExternalLink, 
-  ChevronRight, 
-  Volume2, 
-  VolumeX, 
-  Radio, 
-  Copy, 
-  Check, 
+import React, { useState, useEffect } from 'react';
+import {
+  ShieldCheck,
+  Bookmark,
+  Share2,
+  ExternalLink,
+  ChevronRight,
+  Volume2,
+  VolumeX,
+  Radio,
+  Copy,
+  Check,
   MessageCircle,
-  Tv,
   Sparkles,
-  Globe
+  Globe,
+  Clock
 } from 'lucide-react';
 import { VERIFICATION_STATUSES } from '../data/locations';
 import { sanitizeUrl } from '../utils/security';
 import { speakBangla, stopSpeech } from '../utils/speechUtils';
-import { getSemanticNewsImage } from '../services/newsCrawlerService';
+import { getAccurateTimeAgo } from '../utils/dateUtils';
+import NewsImageFallback from './NewsImageFallback';
 
 export default function NewsCard({
   event,
@@ -37,36 +34,29 @@ export default function NewsCard({
   const [imgError, setImgError] = useState(false);
   const [showQuickTake, setShowQuickTake] = useState(false);
 
-  const statusMeta = VERIFICATION_STATUSES[event.status] || VERIFICATION_STATUSES.unverified;
+  useEffect(() => {
+    setImgError(false);
+  }, [event?.id, event?.image_url]);
+
+  const statusMeta = VERIFICATION_STATUSES[event.status] || VERIFICATION_STATUSES.officially_confirmed;
+  const elapsedLabel = getAccurateTimeAgo(event.published_at, event.time_ago);
+  const hasRealImage = Boolean(event.image_url) && !imgError;
 
   const categoryTheme = {
-    'যানজট ও পরিবহন': { border: 'hover:border-orange-400 dark:hover:border-orange-500', line: 'from-orange-500 to-amber-500' },
-    'কৃষি ও পরিবেশ': { border: 'hover:border-emerald-400 dark:hover:border-emerald-500', line: 'from-emerald-500 to-teal-500' },
+    'যোগাযোগ ও পরিবহন': { border: 'hover:border-orange-400 dark:hover:border-orange-500', line: 'from-orange-500 to-amber-500' },
+    'কৃষি, প্রকৃতি ও পরিবেশ': { border: 'hover:border-emerald-400 dark:hover:border-emerald-500', line: 'from-emerald-500 to-teal-500' },
     'বাণিজ্য ও অর্থনীতি': { border: 'hover:border-blue-400 dark:hover:border-blue-500', line: 'from-blue-500 to-indigo-500' },
     'স্বাস্থ্য ও চিকিৎসা': { border: 'hover:border-rose-400 dark:hover:border-rose-500', line: 'from-rose-500 to-red-500' },
-    'প্রযুক্তি ও শিক্ষা': { border: 'hover:border-purple-400 dark:hover:border-purple-500', line: 'from-purple-500 to-indigo-500' },
-    'দুর্যোগ ও আবহাওয়া': { border: 'hover:border-sky-400 dark:hover:border-sky-500', line: 'from-sky-500 to-cyan-500' },
-    'খেলাধুলা ও বিনোদন': { border: 'hover:border-pink-400 dark:hover:border-pink-500', line: 'from-pink-500 to-rose-500' }
+    'বিজ্ঞান ও প্রযুক্তি': { border: 'hover:border-purple-400 dark:hover:border-purple-500', line: 'from-purple-500 to-indigo-500' },
+    'শিক্ষা ও ক্যারিয়ার': { border: 'hover:border-violet-400 dark:hover:border-violet-500', line: 'from-violet-500 to-purple-500' },
+    'আবহাওয়া ও দুর্যোগ': { border: 'hover:border-sky-400 dark:hover:border-sky-500', line: 'from-sky-500 to-cyan-500' },
+    'খেলাধুলা': { border: 'hover:border-pink-400 dark:hover:border-pink-500', line: 'from-pink-500 to-rose-500' },
+    'বিনোদন ও সংস্কৃতি': { border: 'hover:border-fuchsia-400 dark:hover:border-fuchsia-500', line: 'from-fuchsia-500 to-pink-500' },
+    'আইন ও আদালত': { border: 'hover:border-amber-500 dark:hover:border-amber-500', line: 'from-amber-600 to-red-600' }
   }[event.category] || { border: 'hover:border-emerald-400 dark:hover:border-emerald-500', line: 'from-emerald-500 to-teal-500' };
 
   const isBreaking = event.freshness === 'breaking';
 
-  const getStatusIcon = (statusKey) => {
-    switch (statusKey) {
-      case 'officially_confirmed':
-        return <ShieldCheck className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />;
-      case 'multi_source_match':
-        return <CheckCheck className="w-3 h-3 text-sky-600 dark:text-sky-400" />;
-      case 'single_source':
-        return <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400" />;
-      case 'conflicting_reports':
-        return <AlertOctagon className="w-3 h-3 text-rose-600 dark:text-rose-400" />;
-      default:
-        return <HelpCircle className="w-3 h-3 text-slate-600 dark:text-slate-400" />;
-    }
-  };
-
-  // অডিও পাঠ হ্যান্ডলার
   const handleToggleSpeech = (e) => {
     e.stopPropagation();
     if (isPlayingAudio) {
@@ -82,7 +72,6 @@ export default function NewsCard({
     }
   };
 
-  // সোশ্যাল শেয়ার হ্যান্ডলার
   const handleShareClick = (e) => {
     e.stopPropagation();
     if (navigator.share) {
@@ -98,7 +87,7 @@ export default function NewsCard({
 
   const copyUrl = (e) => {
     e.stopPropagation();
-    navigator.clipboard.writeText(`${event.canonical_bangla_title}\n${window.location.href}`);
+    navigator.clipboard.writeText(`${event.canonical_bangla_title}\n${event.articleUrl || window.location.href}`);
     setCopiedLink(true);
     setTimeout(() => {
       setCopiedLink(false);
@@ -108,7 +97,7 @@ export default function NewsCard({
 
   const shareWhatsApp = (e) => {
     e.stopPropagation();
-    const text = encodeURIComponent(`*${event.canonical_bangla_title}*\n\n${event.summary_bangla}\n\nবিস্তারিত পড়ুন: ${window.location.href}`);
+    const text = encodeURIComponent(`*${event.canonical_bangla_title}*\n\n${event.summary_bangla}\n\nবিস্তারিত পড়ুন: ${event.articleUrl || window.location.href}`);
     window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
     setShowShareMenu(false);
   };
@@ -116,27 +105,36 @@ export default function NewsCard({
   return (
     <article
       onClick={() => onOpenDetail(event)}
-      className={`bg-white dark:bg-stone-900 rounded-2xl border border-stone-200 dark:border-stone-800 shadow-sm hover:shadow-lg dark:hover:shadow-stone-950/60 transition-all duration-200 overflow-hidden flex flex-col justify-between group cursor-pointer relative ${
+      className={`bg-white dark:bg-stone-900 rounded-2xl border border-stone-200 dark:border-stone-800 shadow-sm hover:shadow-xl dark:hover:shadow-stone-950/70 transition-all duration-200 overflow-hidden flex flex-col justify-between group cursor-pointer relative ${
         categoryTheme.border
-      } ${isBreaking ? 'border-rose-400/80 dark:border-rose-500/80 ring-1 ring-rose-500/30' : ''}`}
+      } ${isBreaking ? 'border-rose-400/70 dark:border-rose-500/70 ring-1 ring-rose-500/20' : ''}`}
     >
-      {/* ক্যাটাগরি অনুসারে টপ এক্সেন্ট লাইন */}
+      {/* ক্যাটাগরি এক্সেন্ট লাইন */}
       <div className={`h-1 w-full bg-gradient-to-r ${categoryTheme.line}`} />
 
       <div>
-        {/* ১. কম্প্যাক্ট ফটো কনটেইনার (উচ্চতা h-32 থেকে sm:h-36) */}
-        <div className="relative h-32 sm:h-36 w-full overflow-hidden bg-stone-100 dark:bg-stone-800">
-          <img
-            src={!imgError && event.image_url ? event.image_url : getSemanticNewsImage(event.canonical_bangla_title, event.summary_bangla, event.category)}
-            alt={event.canonical_bangla_title}
-            onError={() => setImgError(true)}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            loading="lazy"
-            decoding="async"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-stone-950/80 via-stone-900/20 to-black/30 pointer-events-none" />
+        {/* ১. ফটো কনটেইনার — শুধুমাত্র মূল পোর্টালের আসল ফটো */}
+        <div className="relative h-36 sm:h-40 w-full overflow-hidden bg-stone-100 dark:bg-stone-800">
+          {hasRealImage ? (
+            <img
+              src={event.image_url}
+              alt={event.canonical_bangla_title}
+              referrerPolicy="no-referrer"
+              onError={() => setImgError(true)}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              loading="lazy"
+              decoding="async"
+            />
+          ) : (
+            <NewsImageFallback
+              sourceName={event.primarySource?.nameBn}
+              category={event.category}
+              color={event.primarySource?.color || '#059669'}
+            />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-stone-950/80 via-stone-900/15 to-black/30 pointer-events-none" />
 
-          {/* টপ বার: পরিধি ব্যাজ (সারাদেশ / আন্তর্জাতিক) ও সোর্স ব্যাজ */}
+          {/* টপ বার: পরিধি ও মূল সোর্স ব্যাজ */}
           <div className="absolute top-2 inset-x-2 flex items-center justify-between gap-1 z-10 pointer-events-none">
             <div className="min-w-0 shrink">
               {event.scope === 'international' || event.category === 'আন্তর্জাতিক ও বিশ্ব' ? (
@@ -146,7 +144,7 @@ export default function NewsCard({
                 </span>
               ) : (
                 <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-950/90 text-emerald-200 backdrop-blur-md flex items-center gap-1 shadow-sm border border-emerald-400/40">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0 animate-pulse"></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0 animate-pulse" />
                   <span>সারাদেশ</span>
                 </span>
               )}
@@ -154,95 +152,89 @@ export default function NewsCard({
 
             <div className="flex items-center gap-1 justify-end shrink-0">
               {event.isLiveRealTime && (
-                <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-600 text-white shadow-sm flex items-center gap-1 backdrop-blur-md">
-                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
+                <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-rose-600 text-white shadow-sm flex items-center gap-1 backdrop-blur-md">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
                   <span>লাইভ</span>
                 </span>
               )}
               {event.primarySource && (
-                <span 
+                <span
                   className="px-2 py-0.5 rounded-md text-[10px] font-bold text-white shadow-sm backdrop-blur-md flex items-center gap-1 border border-white/20"
-                  style={{ backgroundColor: event.primarySource.color || '#E11D48' }}
+                  style={{ backgroundColor: event.primarySource.color || '#0284C7' }}
                 >
-                  <Radio className="w-2.5 h-2.5 animate-pulse" />
+                  <Radio className="w-2.5 h-2.5" />
                   <span>{event.primarySource.nameBn}</span>
                 </span>
               )}
             </div>
           </div>
 
-          {/* বটম বার: ক্যাটাগরি, ব্রেকিং ফ্ল্যাশ ও সময় */}
-          <div className="absolute bottom-1.5 inset-x-2 flex items-center justify-between gap-1 z-10 pointer-events-none">
+          {/* বটম বার: ক্যাটাগরি ও মূল পোর্টালের রুট সময় */}
+          <div className="absolute bottom-2 inset-x-2 flex items-center justify-between gap-1 z-10 pointer-events-none">
             <div className="flex items-center gap-1 min-w-0">
               <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-stone-900/90 text-white backdrop-blur-md border border-white/10 shadow-xs truncate">
                 {event.category}
               </span>
-              {event.freshness === 'breaking' && (
-                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-600 text-white shadow-sm animate-pulse shrink-0">
+              {isBreaking && (
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-600 text-white shadow-sm shrink-0">
                   ব্রেকিং
                 </span>
               )}
             </div>
 
-            <div className="shrink-0 text-[10px] font-bold text-white bg-black/75 px-1.5 py-0.5 rounded backdrop-blur-md border border-white/10">
-              <span>{event.time_ago || 'তাজা'}</span>
+            <div className="shrink-0 text-[10px] font-bold text-white bg-black/80 px-2 py-0.5 rounded backdrop-blur-md border border-white/15 flex items-center gap-1">
+              <Clock className="w-2.5 h-2.5 text-emerald-400" />
+              <span>{elapsedLabel}</span>
             </div>
           </div>
         </div>
 
-        {/* ২. কার্ডের মূল কনটেন্ট (প্যাডিং p-2.5 sm:p-3 - সর্বোচ্চ স্পেস দক্ষতা) */}
-        <div className="p-2.5 sm:p-3">
-          {/* মাইক্রো মেটা রো: ভেরিফিকেশন ও আস্থা স্কোর */}
+        {/* ২. কার্ডের মূল কনটেন্ট */}
+        <div className="p-3 sm:p-3.5">
+          {/* পরিচ্ছন্ন এডিটোরিয়াল মেটা রো */}
           <div className="flex items-center justify-between gap-2 mb-1.5 text-[11px]">
-            <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md font-bold border ${statusMeta.badgeClass}`}>
-              {getStatusIcon(event.status)}
-              <span>{statusMeta.shortBn}</span>
+            <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/70">
+              <ShieldCheck className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+              <span>{statusMeta.shortBn === 'নিশ্চিত' ? 'সরাসরি সংবাদ' : statusMeta.shortBn}</span>
             </div>
 
-            <div className="flex items-center gap-1.5 font-mono text-[11px] text-stone-600 dark:text-stone-400">
-              <span className="font-bold">{event.independence?.independent_source_count || 1} উৎস</span>
-              <span>•</span>
-              <span className={`font-bold px-1.5 py-0.2 rounded text-[10px] ${
-                event.confidence >= 90 ? 'bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-300' : 
-                event.confidence >= 75 ? 'bg-sky-100 text-sky-900 dark:bg-sky-950 dark:text-sky-300' : 'bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-300'
-              }`}>
-                আস্থা {event.confidence}%
-              </span>
-            </div>
+            <span className="text-[11px] font-semibold text-stone-500 dark:text-stone-400 truncate">
+              {event.primarySource?.nameBn || 'জাতীয় ডেস্ক'}
+            </span>
           </div>
 
-          {/* প্রধান শিরোনাম (২ লাইনে সীমাবদ্ধ, স্পষ্ট ও বোল্ড) */}
-          <h3 className="font-serif text-sm sm:text-[15px] font-bold text-stone-900 dark:text-stone-100 leading-snug group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors line-clamp-2 mb-1">
+          {/* প্রধান শিরোনাম */}
+          <h3 className="font-serif text-sm sm:text-[15px] font-bold text-stone-900 dark:text-stone-100 leading-snug group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors line-clamp-2 mb-1.5">
             {event.canonical_bangla_title}
           </h3>
 
-          {/* সারসংক্ষেপ (২ লাইনে সীমাবদ্ধ) */}
+          {/* সারসংক্ষেপ */}
           <p className="text-xs sm:text-[13px] text-stone-600 dark:text-stone-300 font-sans leading-relaxed line-clamp-2 mb-2">
             {event.summary_bangla}
           </p>
 
-          {/* ৩ লাইনে কুইক টেক ড্রপডাউন (ঐচ্ছিক) */}
+          {/* কুইক টেক ড্রপডাউন */}
           <div>
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 setShowQuickTake(prev => !prev);
               }}
-              className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300 hover:text-emerald-900 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-md border border-emerald-200/80 dark:border-emerald-800 transition-all flex items-center gap-1 cursor-pointer mb-1"
+              className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300 hover:text-emerald-900 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-200/80 dark:border-emerald-800 transition-all flex items-center gap-1 cursor-pointer mb-1"
             >
               <Sparkles className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" />
-              <span>{showQuickTake ? 'সংক্ষেপ লুকান ▲' : '⚡ ৩ লাইনে সংক্ষেপ'}</span>
+              <span>{showQuickTake ? 'সংক্ষেপ লুকান ▲' : '⚡ এক নজরে'}</span>
             </button>
 
             {showQuickTake && (
-              <div className="mt-1.5 p-2 rounded-xl bg-emerald-50/90 dark:bg-emerald-950/70 border border-emerald-200/80 dark:border-emerald-800 text-[11px] space-y-1 animate-fadeIn">
+              <div className="mt-1.5 p-2.5 rounded-xl bg-emerald-50/90 dark:bg-emerald-950/70 border border-emerald-200/80 dark:border-emerald-800 text-[11px] space-y-1 animate-fadeIn">
                 <div className="text-stone-800 dark:text-stone-200 leading-snug">
                   <span className="font-bold text-emerald-700 dark:text-emerald-400">বিষয়: </span>
                   {event.canonical_bangla_title}
                 </div>
                 <div className="text-stone-800 dark:text-stone-200 leading-snug">
-                  <span className="font-bold text-emerald-700 dark:text-emerald-400">উৎস: </span>
-                  {event.primarySource?.nameBn || 'যাচাইকৃত গণমাধ্যম'} • {event.time_ago}
+                  <span className="font-bold text-emerald-700 dark:text-emerald-400">প্রকাশ: </span>
+                  {event.primarySource?.nameBn || 'জাতীয় গণমাধ্যম'} • {elapsedLabel}
                 </div>
               </div>
             )}
@@ -250,63 +242,60 @@ export default function NewsCard({
         </div>
       </div>
 
-      {/* ৩. কার্ডের কম্প্যাক্ট অ্যাকশন ফুটার (অডিও, শেয়ার, বুকমার্ক, মূল পোর্টাল ও বিস্তারিত) */}
-      <div className="px-2.5 py-1.5 bg-stone-50/90 dark:bg-stone-850/90 border-t border-stone-100 dark:border-stone-800 flex items-center justify-between text-xs transition-colors">
+      {/* ৩. কার্ড অ্যাকশন ফুটার */}
+      <div className="px-3 py-2 bg-stone-50/90 dark:bg-stone-950/70 border-t border-stone-100 dark:border-stone-800 flex items-center justify-between text-xs transition-colors">
         <div className="flex items-center gap-1">
-          {/* বাংলা এআই অডিও রিডার */}
           <button
             onClick={handleToggleSpeech}
-            className={`p-1 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all ${
-              isPlayingAudio 
-                ? 'bg-rose-600 text-white animate-pulse' 
+            className={`p-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
+              isPlayingAudio
+                ? 'bg-rose-600 text-white animate-pulse'
                 : 'bg-white dark:bg-stone-800 hover:bg-emerald-50 dark:hover:bg-stone-700 text-emerald-800 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
             }`}
             title={isPlayingAudio ? 'পড়া বন্ধ করুন' : 'বাংলায় শুনুন'}
           >
-            {isPlayingAudio ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />}
+            {isPlayingAudio ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />}
           </button>
 
-          {/* বুকমার্ক টগল */}
           <button
             onClick={(e) => {
               e.stopPropagation();
               onToggleBookmark(event.id);
             }}
-            className={`p-1 rounded-lg border transition-colors ${
+            className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
               isBookmarked
                 ? 'bg-emerald-100 dark:bg-emerald-950 border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300'
                 : 'bg-white dark:bg-stone-800 border-stone-200 dark:border-stone-700 text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200'
             }`}
             title={isBookmarked ? 'সংরক্ষণ বাতিল' : 'সংরক্ষণ করুন'}
           >
-            <Bookmark className={`w-3 h-3 ${isBookmarked ? 'fill-emerald-800 dark:fill-emerald-400' : ''}`} />
+            <Bookmark className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-emerald-800 dark:fill-emerald-400' : ''}`} />
           </button>
 
-          {/* সোশ্যাল শেয়ার */}
           <div className="relative">
             <button
               onClick={handleShareClick}
-              className="p-1 rounded-lg border bg-white dark:bg-stone-800 border-stone-200 dark:border-stone-700 text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200 transition-colors"
+              className="p-1.5 rounded-lg border bg-white dark:bg-stone-800 border-stone-200 dark:border-stone-700 text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200 transition-colors cursor-pointer"
               title="শেয়ার করুন"
             >
-              <Share2 className="w-3 h-3" />
+              <Share2 className="w-3.5 h-3.5" />
             </button>
 
             {showShareMenu && (
-              <div 
-                className="absolute left-0 bottom-full mb-1.5 bg-white dark:bg-stone-800 rounded-xl shadow-xl border border-stone-200 dark:border-stone-700 p-1 min-w-[120px] z-30 flex flex-col gap-0.5 animate-fadeIn"
+              <div
+                className="absolute left-0 bottom-full mb-1.5 bg-white dark:bg-stone-800 rounded-xl shadow-xl border border-stone-200 dark:border-stone-700 p-1 min-w-[125px] z-30 flex flex-col gap-0.5 animate-fadeIn"
                 onClick={(e) => e.stopPropagation()}
               >
                 <button
                   onClick={shareWhatsApp}
-                  className="w-full px-2 py-1 rounded-lg text-left text-[11px] font-semibold hover:bg-emerald-50 dark:hover:bg-emerald-950 text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5"
+                  className="w-full px-2 py-1.5 rounded-lg text-left text-[11px] font-semibold hover:bg-emerald-50 dark:hover:bg-emerald-950 text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5"
                 >
                   <MessageCircle className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                   <span>WhatsApp</span>
                 </button>
                 <button
                   onClick={copyUrl}
-                  className="w-full px-2 py-1 rounded-lg text-left text-[11px] font-semibold hover:bg-stone-100 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 flex items-center gap-1.5"
+                  className="w-full px-2 py-1.5 rounded-lg text-left text-[11px] font-semibold hover:bg-stone-100 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 flex items-center gap-1.5"
                 >
                   {copiedLink ? <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-3 h-3 text-stone-500 dark:text-stone-400" />}
                   <span>{copiedLink ? 'কপি হয়েছে!' : 'লিংক কপি'}</span>
@@ -316,7 +305,6 @@ export default function NewsCard({
           </div>
         </div>
 
-        {/* ডান পাশ: আসল পোর্টাল লিংক ও বিস্তারিত */}
         <div className="flex items-center gap-1.5">
           {event.articleUrl && (
             <a
@@ -324,7 +312,7 @@ export default function NewsCard({
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="px-2 py-0.5 rounded-lg bg-white dark:bg-stone-800 hover:bg-emerald-50 dark:hover:bg-stone-700 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 text-[10px] font-bold flex items-center gap-0.5 shadow-2xs hover:scale-105 transition-all cursor-pointer"
+              className="px-2 py-1 rounded-lg bg-white dark:bg-stone-800 hover:bg-emerald-50 dark:hover:bg-stone-700 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 text-[10px] font-bold flex items-center gap-0.5 shadow-2xs hover:scale-105 transition-all cursor-pointer"
               title={`${event.primarySource?.nameBn || 'মূল পোর্টাল'} থেকে সরাসরি পড়ুন`}
             >
               <span>মূল খবর</span>
@@ -333,7 +321,7 @@ export default function NewsCard({
           )}
           <span className="text-emerald-800 dark:text-emerald-400 text-xs font-bold flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
             <span>বিস্তারিত</span>
-            <ChevronRight className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+            <ChevronRight className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
           </span>
         </div>
       </div>

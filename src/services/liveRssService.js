@@ -6,28 +6,36 @@
 
 import { DISTRICTS, DIVISIONS } from '../data/locations.js';
 import { getTodayTimestamp, getTodayTimeLabel, VERIFIED_NEWS_IMAGES, getSemanticNewsImage } from './newsCrawlerService.js';
+import { getAccurateTimeAgo } from '../utils/dateUtils.js';
 
 const LIVE_FEEDS = [
   {
     id: 'prothomalo',
-    nameBn: 'প্রথম আলো লাইভ',
+    nameBn: 'প্রথম আলো',
     color: '#0284C7',
     type: 'national_press',
     rssUrl: 'https://www.prothomalo.com/feed'
   },
   {
-    id: 'bbcbangla',
-    nameBn: 'বিবিসি বাংলা লাইভ',
-    color: '#B91C1C',
+    id: 'ittefaq',
+    nameBn: 'দৈনিক ইত্তেফাক',
+    color: '#D97706',
     type: 'national_press',
-    rssUrl: 'https://www.bbc.com/bengali/index.xml'
+    rssUrl: 'https://www.ittefaq.com.bd/feed/'
   },
   {
-    id: 'dailystar_bangla',
-    nameBn: 'ডেইলি স্টার বাংলা',
-    color: '#059669',
+    id: 'banglatribune',
+    nameBn: 'বাংলা ট্রিবিউন',
+    color: '#0D9488',
     type: 'national_press',
-    rssUrl: 'https://bangla.thedailystar.net/rss.xml'
+    rssUrl: 'https://www.banglatribune.com/feed/'
+  },
+  {
+    id: 'bbcbangla',
+    nameBn: 'বিবিসি বাংলা',
+    color: '#B91C1C',
+    type: 'international_press',
+    rssUrl: 'https://www.bbc.com/bengali/index.xml'
   }
 ];
 
@@ -135,31 +143,40 @@ export const detectLocationFromText = (text = '') => {
   };
 };
 
-// ক্যাটাগরি শনাক্তকরণ
+// ক্যাটাগরি শনাক্তকরণ (locations.js এর সাথে শতভাগ সামঞ্জস্যপূর্ণ)
 export const detectCategory = (title = '', description = '') => {
   const combined = `${title} ${description}`.toLowerCase();
-  if (combined.includes('সড়ক') || combined.includes('বাস') || combined.includes('ট্রেন') || combined.includes('মহাসড়ক') || combined.includes('উড়ালসেতু') || combined.includes('যানজট')) {
-    return 'যানজট ও পরিবহন';
+  if (combined.includes('সড়ক') || combined.includes('বাস') || combined.includes('ট্রেন') || combined.includes('মহাসড়ক') || combined.includes('উড়ালসেতু') || combined.includes('যানজট') || combined.includes('মেট্রোরেল')) {
+    return 'যোগাযোগ ও পরিবহন';
   }
-  if (combined.includes('কৃষি') || combined.includes('ধান') || combined.includes('ফসল') || combined.includes('পরিবেশ') || combined.includes('নদী') || combined.includes('বন')) {
-    return 'কৃষি ও পরিবেশ';
+  if (combined.includes('কৃষি') || combined.includes('ধান') || combined.includes('ফসল') || combined.includes('পরিবেশ') || combined.includes('নদী')) {
+    return 'কৃষি, প্রকৃতি ও পরিবেশ';
   }
-  if (combined.includes('বাণিজ্য') || combined.includes('বাজার') || combined.includes('টাকা') || combined.includes('রফতানি') || combined.includes('ব্যাংক') || combined.includes('অর্থ')) {
+  if (combined.includes('বাণিজ্য') || combined.includes('বাজার') || combined.includes('টাকা') || combined.includes('রফতানি') || combined.includes('ব্যাংক') || combined.includes('অর্থনীতি') || combined.includes('মজুরি')) {
     return 'বাণিজ্য ও অর্থনীতি';
   }
   if (combined.includes('হাসপাতাল') || combined.includes('রোগী') || combined.includes('চিকিৎসা') || combined.includes('স্বাস্থ্য') || combined.includes('ডেঙ্গু') || combined.includes('ডাক্তার')) {
     return 'স্বাস্থ্য ও চিকিৎসা';
   }
-  if (combined.includes('স্কুল') || combined.includes('কলেজ') || combined.includes('বিশ্ববিদ্যালয়') || combined.includes('শিক্ষার্থী') || combined.includes('পরীক্ষা') || combined.includes('ভর্তি') || combined.includes('বিজ্ঞান')) {
-    return 'প্রযুক্তি ও শিক্ষা';
+  if (combined.includes('বিজ্ঞান') || combined.includes('প্রযুক্তি') || combined.includes('এআই') || combined.includes('সাইবার')) {
+    return 'বিজ্ঞান ও প্রযুক্তি';
+  }
+  if (combined.includes('স্কুল') || combined.includes('কলেজ') || combined.includes('বিশ্ববিদ্যালয়') || combined.includes('শিক্ষার্থী') || combined.includes('পরীক্ষা') || combined.includes('ভর্তি') || combined.includes('বিসিএস')) {
+    return 'শিক্ষা ও ক্যারিয়ার';
+  }
+  if (combined.includes('আদালত') || combined.includes('গ্রেপ্তার') || combined.includes('গ্রেফতার') || combined.includes('মামলা') || combined.includes('পুলিশ') || combined.includes('হত্যা')) {
+    return 'আইন ও আদালত';
   }
   if (combined.includes('ঝড়') || combined.includes('বৃষ্টি') || combined.includes('বন্যা') || combined.includes('আবহাওয়া') || combined.includes('ঘূর্ণিঝড়') || combined.includes('শৈত্যপ্রবাহ')) {
-    return 'দুর্যোগ ও আবহাওয়া';
+    return 'আবহাওয়া ও দুর্যোগ';
   }
-  if (combined.includes('ক্রিকেট') || combined.includes('ফুটবল') || combined.includes('ম্যাচ') || combined.includes('স্টেডিয়াম') || combined.includes('রান') || combined.includes('উইকেট')) {
-    return 'খেলাধুলা ও বিনোদন';
+  if (combined.includes('ক্রিকেট') || combined.includes('ফুটবল') || combined.includes('ম্যাচ') || combined.includes('স্টেডিয়াম') || combined.includes('গোল') || combined.includes('উইকেট')) {
+    return 'খেলাধুলা';
   }
-  return 'জাতীয় ও রাজনীতি';
+  if (combined.includes('সিনেমা') || combined.includes('নাটক') || combined.includes('অভিনেতা') || combined.includes('চলচ্চিত্র')) {
+    return 'বিনোদন ও সংস্কৃতি';
+  }
+  return 'জাতীয় ও রাজনীতি';
 };
 
 // HTML ট্যাগ মুছে ফেলা
@@ -208,18 +225,19 @@ export async function fetchLiveRssNews() {
         const loc = detectLocationFromText(`${title} ${summary}`);
         const cat = detectCategory(title, summary);
 
-        // আজকের সময় গণনা
-        let timeAgoLabel = 'এইমাত্র (লাইভ আরএসএস)';
-        let timestamp = getTodayTimestamp(0, idx * 5 + 2);
+        // মূল পোর্টালের রুট টাইমস্ট্যাম্প অনুযায়ী সময় গণনা
+        let timestamp = new Date().toISOString();
+        let timeAgoLabel = 'এইমাত্র';
 
         if (item.pubDate) {
           try {
             const pubTime = new Date(item.pubDate).getTime();
-            const diffMinutes = Math.max(1, Math.floor((Date.now() - pubTime) / 60000));
-            timeAgoLabel = getTodayTimeLabel(diffMinutes);
-            timestamp = new Date(pubTime).toISOString();
+            if (!isNaN(pubTime)) {
+              timestamp = new Date(pubTime).toISOString();
+              timeAgoLabel = getAccurateTimeAgo(timestamp);
+            }
           } catch {
-            timeAgoLabel = getTodayTimeLabel(idx * 7 + 3);
+            timeAgoLabel = 'তাজা সংবাদ';
           }
         }
 
@@ -228,23 +246,27 @@ export async function fetchLiveRssNews() {
 
         // কন্টেন্ট বা ডেসক্রিপশনে <img> ট্যাগ থাকলে সেখান থেকে উদ্ধার
         if (!imageUrl || imageUrl.includes('spacer') || imageUrl.length < 10) {
-          const matchContent = (item.content || '').match(/<img[^>]+src=["']([^"']+)["']/i);
-          const matchDesc = (item.description || '').match(/<img[^>]+src=["']([^"']+)["']/i);
+          const matchContent = (item.content || '').match(/(?:<|&lt;)img[^>]+src=(?:["']|&quot;)(https?:\/\/[^"'\s&]+)(?:["']|&quot;)/i);
+          const matchDesc = (item.description || '').match(/(?:<|&lt;)img[^>]+src=(?:["']|&quot;)(https?:\/\/[^"'\s&]+)(?:["']|&quot;)/i);
           if (matchContent && matchContent[1]) imageUrl = matchContent[1];
           else if (matchDesc && matchDesc[1]) imageUrl = matchDesc[1];
         }
 
-        // প্রথম আলোর থাম্বনেইল হলে হাই-রেজ্যুলেশনে আপস্কেল
-        if (imageUrl && imageUrl.includes('media.prothomalo.com') && imageUrl.includes('?w=')) {
+        // Jadewits ও BBC অপ্টিমাইজড রেজোলিউশন
+        if (imageUrl && imageUrl.includes('/contents/cache/images/300x300x1/')) {
+          imageUrl = imageUrl.replace('/contents/cache/images/300x300x1/', '/contents/cache/images/800x450x1/');
+        } else if (imageUrl && imageUrl.includes('ichef.bbci.co.uk') && imageUrl.includes('/240/')) {
+          imageUrl = imageUrl.replace('/240/', '/800/');
+        } else if (imageUrl && imageUrl.includes('media.prothomalo.com') && imageUrl.includes('?w=')) {
           imageUrl = imageUrl.replace(/\?w=\d+.*$/, '?w=1200&auto=format');
         }
 
-        // ২. পোর্টালের ছবি না থাকলে শতভাগ প্রাসঙ্গিক সিম্যান্টিক কী-ওয়ার্ড ম্যাচিং (কখনোই ভুল ইমেজ নয়)
+        // ২. পোর্টালের নিজস্ব ছবি না থাকলে প্লেসহোল্ডার এড়িয়ে null রাখি যাতে ভুয়া ছবি না দেখায়
         if (!imageUrl || imageUrl.includes('spacer') || imageUrl.length < 10) {
-          imageUrl = getSemanticNewsImage(title, summary, cat);
+          imageUrl = null;
         }
 
-        const isIntl = cat === 'আন্তর্জাতিক ও বিশ্ব' || feed.id === 'bbcbangla' || title.includes('বিশ্ব') || title.includes('ট্রাম্প') || title.includes('পুতিন') || title.includes('গাজা') || title.includes('যুক্তরাষ্ট্র');
+        const isIntl = cat === 'আন্তর্জাতিক ও বিশ্ব' || feed.id === 'bbcbangla' || title.includes('ট্রাম্প') || title.includes('পুতিন') || title.includes('গাজা') || title.includes('যুক্তরাষ্ট্র');
         const scopeObj = isIntl ? {
           scope: 'international',
           scopeLabel: 'আন্তর্জাতিক',
